@@ -2,24 +2,27 @@
 var express = require("express");
 var fs = require("fs");
 var app = express();
-var PORT = 4000;
+var PORT = process.env.PORT || 4000;
 var path = require("path");
+const { uuid } = require("uuidv4");
 
 // Middleware activation
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.use(express.static("./public"));
 
 app.get("/notes", function (req, res) {
   res.sendFile(path.join(__dirname, "public", "notes.html"));
 });
 
-app.get("*", function (req, res) {
+app.get("/*", function (req, res) {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 // Get API notes - reading the JSON file and returning it in json format
 app.get("/api/notes", function (req, res) {
   fs.readFile("./db/db.json", function (err, data) {
+    if (err) throw err;
     var note = JSON.parse(data);
     res.json(note);
     console.log(note);
@@ -27,11 +30,23 @@ app.get("/api/notes", function (req, res) {
 });
 
 app.post("/api/notes", function (req, res) {
-  fs.writeFile("./db/db.json", function (err, data) {
-    var note = JSON.parse(data);
-    res.json(note);
+  fs.readFile(".db/db.json", function (err, data) {
+    if (err) throw err;
+    var newNote = data;
+    console.log(newNote);
+    // newNote.id = uuid();
   });
+  fs.appendFile("db/db.json", newNote),
+    function (err, data) {
+      if (err) throw err;
+    };
+  res.json(newNote);
+
+  // fs.writeFile("./db/db.json", function (err, data) {
+  //   var note = JSON.parse(data);
+  //   res.json(note);
 });
+// });
 
 app.delete("/api/notes/:id", function (req, res) {
   var note = req.params.id;
